@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:lumina/core/services/permission_service.dart';
 import 'package:lumina/features/home/widgets/home_drawer.dart';
+import 'package:lumina/features/notes/ui/camera_screen.dart';
 import '../../../core/theme/app_colors.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -68,8 +70,25 @@ class HomeScreen extends StatelessWidget {
         ),
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // TODO: Open Camera for OCR
+        onPressed: () async {
+          bool isAllowed = await PermissionService.requestCameraPermission();
+
+          if (isAllowed) {
+            if (context.mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const CameraScreen()),
+              );
+            }
+          } else {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("Camera permission is required to scan notes."),
+                ),
+              );
+            }
+          }
         },
         backgroundColor: AppColors.primaryPurple,
         label: const Text("Scan Note", style: TextStyle(color: Colors.white)),

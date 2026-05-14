@@ -251,12 +251,17 @@ class _CameraScreenState extends State<CameraScreen> {
 
       if (mounted) {
         Navigator.pop(context);
-        Navigator.push(
+
+        final String? reviewedText = await Navigator.push<String>(
           context,
           MaterialPageRoute(
             builder: (context) => NoteEditorScreen(initialText: scannedText),
           ),
         );
+
+        if (mounted && reviewedText != null) {
+          Navigator.pop(context, reviewedText);
+        }
       }
     } catch (e) {
       dPrint("Capture/Edit Error: $e");

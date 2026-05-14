@@ -1,5 +1,6 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:lumina/core/utils/debug.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:lumina/features/home/ui/home_screen.dart';
@@ -16,6 +17,8 @@ void main() async {
   } on CameraException catch (e) {
     dPrint('Error initializing cameras: $e');
   }
+  await Hive.initFlutter();
+  await Hive.openBox('notes');
   final prefs = await SharedPreferences.getInstance();
   final String savedTheme = prefs.getString('theme_mode') ?? 'light';
   themeNotifier.value = savedTheme == 'dark' ? ThemeMode.dark : ThemeMode.light;

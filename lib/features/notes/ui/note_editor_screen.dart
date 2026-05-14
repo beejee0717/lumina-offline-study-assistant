@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_colors.dart';
 
 class NoteEditorScreen extends StatefulWidget {
   final String initialText;
@@ -12,7 +11,6 @@ class NoteEditorScreen extends StatefulWidget {
 
 class _NoteEditorScreenState extends State<NoteEditorScreen> {
   late TextEditingController _contentController;
-  final TextEditingController _titleController = TextEditingController(text: "New Scan");
 
   @override
   void initState() {
@@ -23,7 +21,6 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
   @override
   void dispose() {
     _contentController.dispose();
-    _titleController.dispose();
     super.dispose();
   }
 
@@ -36,8 +33,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           IconButton(
             icon: const Icon(Icons.check_rounded),
             onPressed: () {
-              // TODO: Save to Database
-              Navigator.popUntil(context, (route) => route.isFirst);
+              Navigator.pop(context, _contentController.text);
             },
           ),
         ],
@@ -46,15 +42,6 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(
-              controller: _titleController,
-              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-              decoration: const InputDecoration(
-                hintText: "Note Title",
-                border: InputBorder.none,
-              ),
-            ),
-            const Divider(),
             Expanded(
               child: TextField(
                 controller: _contentController,

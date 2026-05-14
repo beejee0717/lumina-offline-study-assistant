@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lumina/core/theme/app_colors.dart';
 
 class BigButton extends StatelessWidget {
   final String label;
@@ -7,6 +8,9 @@ class BigButton extends StatelessWidget {
   final Color? textColor;
   final bool isFullWidth;
   final bool hasShadow;
+  final Color shadowColor;
+  final double paddingHorizontal;
+  final double paddingVertical;
 
   const BigButton({
     super.key,
@@ -16,6 +20,9 @@ class BigButton extends StatelessWidget {
     required this.textColor,
     this.isFullWidth = false,
     this.hasShadow = true,
+    this.shadowColor = AppColors.primaryPurple,
+    this.paddingHorizontal = 32,
+    this.paddingVertical = 12
   });
 
   @override
@@ -24,17 +31,19 @@ class BigButton extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: isFullWidth ? double.infinity : null,
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        padding: EdgeInsets.symmetric(horizontal: paddingHorizontal, vertical: paddingVertical),
         decoration: BoxDecoration(
-          color: color ,
+          color: color,
           borderRadius: BorderRadius.circular(18),
-          boxShadow: hasShadow ? [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ] : null,
+          boxShadow: hasShadow
+              ? [
+                  BoxShadow(
+                    color: shadowColor.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
         ),
         child: Text(
           label,

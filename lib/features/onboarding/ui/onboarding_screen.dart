@@ -119,8 +119,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ? BigButton(
                         label: "Previous",
                         color: Colors.transparent,
-                        textColor: AppColors
-                            .primaryPurple, 
+                        textColor: AppColors.primaryPurple,
                         hasShadow: false,
                         onTap: () {
                           _controller.previousPage(
@@ -132,10 +131,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     : const SizedBox.shrink(),
 
                 BigButton(
+                  paddingHorizontal: 32,
+                  paddingVertical: 16,
                   label: _currentIndex == _contents.length - 1
                       ? "Get Started"
                       : "Next",
-                  color: AppColors.primaryPurple, 
+                  color: AppColors.primaryPurple,
                   textColor: Colors.white,
                   onTap: () {
                     if (_currentIndex == _contents.length - 1) {

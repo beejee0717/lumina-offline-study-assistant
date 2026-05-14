@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'features/onboarding/ui/onboarding_screen.dart';
+import 'package:lumina/features/home/ui/home_screen.dart';
+import 'package:lumina/features/onboarding/ui/onboarding_screen.dart';
+import 'package:lumina/core/theme/app_theme.dart';
+
+final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final prefs = await SharedPreferences.getInstance();
+  final String savedTheme = prefs.getString('theme_mode') ?? 'light';
+  themeNotifier.value = savedTheme == 'dark' ? ThemeMode.dark : ThemeMode.light;
   final bool isFirstRun = prefs.getBool('is_first_run') ?? true;
 
   runApp(LuminaApp(isFirstRun: isFirstRun));
@@ -17,30 +23,19 @@ class LuminaApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Lumina',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blue,
-          brightness: Brightness.light,
-        ),
-      ),
-      home: isFirstRun ? const OnboardingScreen() : const PlaceholderHomePage(),
-
-      routes: {'/home': (context) => const PlaceholderHomePage()},
-    );
-  }
-}
-
-class PlaceholderHomePage extends StatelessWidget {
-  const PlaceholderHomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(child: Text("Home Page (Coming Soon!)")),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (context, currentMode, _) {
+        return MaterialApp(
+          title: 'Lumina',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: currentMode,
+          home: isFirstRun ? const OnboardingScreen() : const HomeScreen(),
+          routes: {'/home': (context) => const HomeScreen()},
+        );
+      },
     );
   }
 }

@@ -394,14 +394,14 @@ class _HomeScreenState extends State<HomeScreen> {
               Text(
                 "Are you sure you want to delete ${_selectedKeys.length} item(s)? This action cannot be undone and will delete all nested files.",
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600], height: 1.5),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7), height: 1.5),
               ),
               const SizedBox(height: 32),
               Row(
                 children: [
                   Expanded(
                     child: BigButton(
-                      textColor: Colors.black,
+                      textColor: Theme.of(context).colorScheme.onSurface,
                       label: "Cancel",
                       color: Colors.transparent,
                       hasShadow: false,
@@ -413,7 +413,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: BigButton(
                       textColor: Colors.white,
                       label: "Delete",
-                      color: Colors.red,
+                      color: isDarkMode ?Colors.red.withValues(alpha: 0.5) :Colors.red,
                       shadowColor: Colors.red,
                       onTap: () async {
                         for (var key in _selectedKeys) {

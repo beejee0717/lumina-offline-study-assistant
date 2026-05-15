@@ -38,7 +38,7 @@ class NoteController {
                 decoration: InputDecoration(
                   hintText: isFolder ? "Enter folder name" : "Enter note title",
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: Theme.of(context).colorScheme.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -64,7 +64,7 @@ class NoteController {
                       label: 'Cancel',
                       onTap: () => Navigator.pop(context),
                       color: Colors.transparent,
-                      textColor: Colors.grey[600],
+                      textColor: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                       hasShadow: false,
                     ),
                   ),

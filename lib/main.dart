@@ -8,6 +8,7 @@ import 'package:lumina/features/onboarding/ui/onboarding_screen.dart';
 import 'package:lumina/core/theme/app_theme.dart';
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
+bool get isDarkMode => themeNotifier.value == ThemeMode.dark;
 late List<CameraDescription> cameras;
 
 void main() async {

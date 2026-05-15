@@ -6,8 +6,10 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorSchemeSeed: AppColors.primaryPurple,
-      scaffoldBackgroundColor: AppColors.backgroundLight,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: AppColors.primaryPurple,
+        surface: Colors.white,
+      ),
     );
   }
 
@@ -15,7 +17,13 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorSchemeSeed: AppColors.primaryPurpleDark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: AppColors.primaryPurpleDark,
+        brightness: Brightness.dark,
+        surface: AppColors.surfaceDark,
+        onSurface: Colors.white,
+        primary: AppColors.primaryPurpleDark,
+      ),
       scaffoldBackgroundColor: AppColors.backgroundDark,
     );
   }

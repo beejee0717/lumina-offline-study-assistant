@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:lumina/main.dart';
 import 'camera_screen.dart';
 import '../../../core/theme/app_colors.dart';
 import 'package:intl/intl.dart';
@@ -58,18 +59,19 @@ class _NotePageState extends State<NotePage> {
     final noteData = _box.get(widget.noteKey);
     final DateTime timestamp = DateTime.parse(noteData['timestamp']);
     final String formattedDate = DateFormat('MMMM d, y').format(timestamp);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA), 
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: colorScheme.onSurface),
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(noteData['name'],
-                style: const TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold)),
+                style: TextStyle(color: colorScheme.onSurface, fontSize: 18, fontWeight: FontWeight.bold)),
             Text(formattedDate, style: TextStyle(color: Colors.grey[500], fontSize: 12)),
           ],
         ),
@@ -80,7 +82,7 @@ class _NotePageState extends State<NotePage> {
                 color: AppColors.primaryPurple),
             onPressed: () => setState(() => _isReadOnly = !_isReadOnly),
           ),
-          IconButton(icon: const Icon(Icons.share_outlined), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.share_outlined, color: AppColors.primaryPurple), onPressed: () {}),
         ],
       ),
       body: Column(
@@ -89,12 +91,12 @@ class _NotePageState extends State<NotePage> {
             child: Container(
               margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 15, offset: const Offset(0, 5)),
                 ],
-                border: Border.all(color: Colors.grey[100]!),
+                border: Border.all(color: isDarkMode ? colorScheme.onPrimaryFixedVariant : Colors.grey[100]!),
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(24),
@@ -114,7 +116,7 @@ class _NotePageState extends State<NotePage> {
                     style: TextStyle(
                       fontSize: 18,
                       height: 1.6,
-                      color: _isReadOnly ? Colors.black87 : Colors.black,
+                      color: _isReadOnly ? colorScheme.onSurfaceVariant : colorScheme.onSurface,
                     ),
                     decoration: InputDecoration(
                       contentPadding: const EdgeInsets.all(24),
@@ -131,7 +133,7 @@ class _NotePageState extends State<NotePage> {
           
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            color: Colors.white,
+            color: colorScheme.surfaceDim,
             child: Row(
               children: [
                 Text("$_wordCount words",

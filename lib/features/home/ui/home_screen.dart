@@ -179,8 +179,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final DateTime timestamp = DateTime.parse(note['timestamp']);
     final String formattedDate = DateFormat('MMM d, h:mm a').format(timestamp);
 
-    final bool isDark = currentMode == ThemeMode.dark;
-    final theme = isDark ? AppTheme.darkTheme : AppTheme.lightTheme;
+    final theme = isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme;
     final colorScheme = theme.colorScheme;
 
     return Padding(
@@ -192,7 +191,7 @@ class _HomeScreenState extends State<HomeScreen> {
         color: isSelected
             ? colorScheme.primary.withValues(alpha: 0.15)
             : colorScheme.surface,
-        elevation: isDark ? 0 : 2,
+        elevation: isDarkMode ? 0 : 2,
         shadowColor: Colors.black26,
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -223,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen> {
               border: Border.all(
                 color: isSelected
                     ? colorScheme.primary
-                    : (isDark ? Colors.white10 : Colors.transparent),
+                    : (isDarkMode ? Colors.white10 : Colors.transparent),
                 width: 1.5,
               ),
             ),

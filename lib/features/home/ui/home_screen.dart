@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:lumina/core/theme/app_theme.dart';
 import 'package:lumina/core/widgets/buttons.dart';
 import 'package:lumina/features/home/widgets/home_drawer.dart';
 import 'package:lumina/features/notes/ui/note_page.dart';
 import 'package:lumina/features/notes/widgets/note_controller.dart';
+import 'package:lumina/main.dart';
 import '../../../core/theme/app_colors.dart';
 import 'package:intl/intl.dart';
 
@@ -30,216 +32,242 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final box = Hive.box('notes');
+    return ValueListenableBuilder(
+      valueListenable: themeNotifier,
+      builder: (context, value, child) {
+        return Scaffold(
+          appBar: AppBar(
+            leading: _isSelectionMode
+                ? IconButton(
+                    icon: const Icon(Icons.close),
+                    onPressed: () => setState(() => _selectedKeys.clear()),
+                  )
+                : null,
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: _isSelectionMode
-            ? IconButton(
-                icon: const Icon(Icons.close),
-                onPressed: () => setState(() => _selectedKeys.clear()),
-              )
-            : null,
+            title: _isSelectionMode
+                ? Text("${_selectedKeys.length} selected")
+                : _isSearching
+                ? TextField(
+                    controller: _searchController,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      hintText: "Search notes...",
+                      border: InputBorder.none,
+                    ),
+                    onChanged: (value) => setState(() => _searchQuery = value),
+                  )
+                : Text(
+                    widget.folderName ?? 'Lumina',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
 
-        title: _isSelectionMode
-            ? Text("${_selectedKeys.length} selected")
-            : _isSearching
-            ? TextField(
-                controller: _searchController,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: "Search notes...",
-                  border: InputBorder.none,
+            actions: [
+              if (_isSelectionMode)
+                IconButton(
+                  icon: const Icon(Icons.delete_outline, color: Colors.red),
+                  onPressed: _confirmDelete,
+                )
+              else ...[
+                IconButton(
+                  icon: Icon(_isSearching ? Icons.close : Icons.search),
+                  onPressed: () {
+                    setState(() {
+                      _isSearching = !_isSearching;
+                      if (!_isSearching) _searchQuery = "";
+                      _searchController.clear();
+                    });
+                  },
                 ),
-                onChanged: (value) => setState(() => _searchQuery = value),
-              )
-            : Text(
-                widget.folderName ?? 'Lumina',
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
+                PopupMenuButton<SortOption>(
+                  icon: const Icon(Icons.sort_rounded),
+                  onSelected: (SortOption result) {
+                    setState(() => _currentSort = result);
+                  },
+                  itemBuilder: (BuildContext context) =>
+                      <PopupMenuEntry<SortOption>>[
+                        const PopupMenuItem(
+                          value: SortOption.newest,
+                          child: Text('Newest First'),
+                        ),
+                        const PopupMenuItem(
+                          value: SortOption.oldest,
+                          child: Text('Oldest First'),
+                        ),
+                        const PopupMenuItem(
+                          value: SortOption.alphabetical,
+                          child: Text('Alphabetical'),
+                        ),
+                      ],
+                ),
+              ],
+            ],
+          ),
+          drawer: const HomeDrawer(),
+          body: ValueListenableBuilder(
+            valueListenable: box.listenable(),
+            builder: (context, Box box, _) {
+              if (box.isEmpty) return _buildEmptyState();
 
-        actions: [
-          if (_isSelectionMode)
-            IconButton(
-              icon: const Icon(Icons.delete_outline, color: Colors.red),
-              onPressed: _confirmDelete,
-            )
-          else ...[
-            IconButton(
-              icon: Icon(_isSearching ? Icons.close : Icons.search),
-              onPressed: () {
-                setState(() {
-                  _isSearching = !_isSearching;
-                  if (!_isSearching) _searchQuery = "";
-                  _searchController.clear();
-                });
-              },
-            ),
-            PopupMenuButton<SortOption>(
-              icon: const Icon(Icons.sort_rounded),
-              onSelected: (SortOption result) {
-                setState(() => _currentSort = result);
-              },
-              itemBuilder: (BuildContext context) =>
-                  <PopupMenuEntry<SortOption>>[
-                    const PopupMenuItem(
-                      value: SortOption.newest,
-                      child: Text('Newest First'),
-                    ),
-                    const PopupMenuItem(
-                      value: SortOption.oldest,
-                      child: Text('Oldest First'),
-                    ),
-                    const PopupMenuItem(
-                      value: SortOption.alphabetical,
-                      child: Text('Alphabetical'),
-                    ),
-                  ],
-            ),
-          ],
-        ],
-      ),
-      drawer: const HomeDrawer(),
-      body: ValueListenableBuilder(
-        valueListenable: box.listenable(),
-        builder: (context, Box box, _) {
-          if (box.isEmpty) return _buildEmptyState();
+              List<MapEntry<dynamic, dynamic>> items = box
+                  .toMap()
+                  .entries
+                  .toList();
+              items = items.where((entry) {
+                final parentId = entry.value['parentId'];
+                return parentId == widget.parentKey;
+              }).toList();
 
-          List<MapEntry<dynamic, dynamic>> items = box.toMap().entries.toList();
-          items = items.where((entry) {
-            final parentId = entry.value['parentId'];
-            return parentId == widget.parentKey;
-          }).toList();
+              if (_searchQuery.isNotEmpty) {
+                items = items.where((entry) {
+                  final String name = entry.value['name']
+                      .toString()
+                      .toLowerCase();
+                  return name.contains(_searchQuery.toLowerCase());
+                }).toList();
+              }
 
-          if (_searchQuery.isNotEmpty) {
-            items = items.where((entry) {
-              final String name = entry.value['name'].toString().toLowerCase();
-              return name.contains(_searchQuery.toLowerCase());
-            }).toList();
-          }
+              items.sort((a, b) {
+                switch (_currentSort) {
+                  case SortOption.alphabetical:
+                    return a.value['name'].toString().compareTo(
+                      b.value['name'].toString(),
+                    );
+                  case SortOption.oldest:
+                    return a.value['timestamp'].toString().compareTo(
+                      b.value['timestamp'].toString(),
+                    );
+                  case SortOption.newest:
+                    return b.value['timestamp'].toString().compareTo(
+                      a.value['timestamp'].toString(),
+                    );
+                }
+              });
 
-          items.sort((a, b) {
-            switch (_currentSort) {
-              case SortOption.alphabetical:
-                return a.value['name'].toString().compareTo(
-                  b.value['name'].toString(),
-                );
-              case SortOption.oldest:
-                return a.value['timestamp'].toString().compareTo(
-                  b.value['timestamp'].toString(),
-                );
-              case SortOption.newest:
-                return b.value['timestamp'].toString().compareTo(
-                  a.value['timestamp'].toString(),
-                );
-            }
-          });
+              if (items.isEmpty && _searchQuery.isNotEmpty) {
+                return const Center(child: Text("No results found."));
+              }
 
-          if (items.isEmpty && _searchQuery.isNotEmpty) {
-            return const Center(child: Text("No results found."));
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final key = items[index].key;
-              final note = items[index].value;
-              return _buildNoteItem(context, key, note);
+              return ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final key = items[index].key;
+                  final note = items[index].value;
+                  return _buildNoteItem(context, key, note, value);
+                },
+              );
             },
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showCreateMenu(context),
-        backgroundColor: AppColors.primaryPurple,
-        child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
-      ),
+          ),
+          floatingActionButton: FloatingActionButton(
+            onPressed: () => _showCreateMenu(context),
+            backgroundColor: AppColors.primaryPurple,
+            child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildNoteItem(BuildContext context, dynamic key, dynamic note) {
+  Widget _buildNoteItem(
+    BuildContext context,
+    dynamic key,
+    dynamic note,
+    ThemeMode currentMode,
+  ) {
     final bool isFolder = note['isFolder'] ?? false;
     final bool isSelected = _selectedKeys.contains(key);
     final DateTime timestamp = DateTime.parse(note['timestamp']);
     final String formattedDate = DateFormat('MMM d, h:mm a').format(timestamp);
 
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isSelected
-            ? AppColors.primaryPurple.withValues(alpha: 0.05)
-            : Colors.white,
+    final bool isDark = currentMode == ThemeMode.dark;
+    final theme = isDark ? AppTheme.darkTheme : AppTheme.lightTheme;
+    final colorScheme = theme.colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        key: ValueKey("${key}_${theme.brightness}"),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isSelected ? AppColors.primaryPurple : Colors.transparent,
-          width: 2,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: ListTile(
-        onLongPress: () => _toggleSelection(key),
-        onTap: () {
-          if (_isSelectionMode) {
-            _toggleSelection(key);
-          } else if (isFolder) {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    HomeScreen(parentKey: key, folderName: note['name']),
-              ),
-            );
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => NotePage(noteKey: key)),
-            );
-          }
-        },
-        leading: Stack(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: AppColors.primaryPurple.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                isFolder ? Icons.folder_rounded : Icons.description_rounded,
-                color: AppColors.primaryPurple,
-                size: 28,
+
+        color: isSelected
+            ? colorScheme.primary.withValues(alpha: 0.15)
+            : colorScheme.surface,
+        elevation: isDark ? 0 : 2,
+        shadowColor: Colors.black26,
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onLongPress: () => _toggleSelection(key),
+          onTap: () {
+            if (_isSelectionMode) {
+              _toggleSelection(key);
+            } else if (isFolder) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      HomeScreen(parentKey: key, folderName: note['name']),
+                ),
+              );
+            } else {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => NotePage(noteKey: key)),
+              );
+            }
+          },
+
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected
+                    ? colorScheme.primary
+                    : (isDark ? Colors.white10 : Colors.transparent),
+                width: 1.5,
               ),
             ),
-            if (isSelected)
-              const Positioned(
-                right: -2,
-                bottom: -2,
-                child: CircleAvatar(
-                  radius: 10,
-                  backgroundColor: AppColors.primaryPurple,
-                  child: Icon(Icons.check, size: 12, color: Colors.white),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isFolder ? Icons.folder_rounded : Icons.description_rounded,
+                  color: colorScheme.primary,
+                  size: 28,
                 ),
               ),
-          ],
+              title: Text(
+                note['name'],
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              subtitle: Text(
+                isFolder ? "Folder • $formattedDate" : "Note • $formattedDate",
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 13,
+                ),
+              ),
+              trailing: _isSelectionMode
+                  ? null
+                  : Icon(
+                      Icons.chevron_right_rounded,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+            ),
+          ),
         ),
-        title: Text(
-          note['name'],
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-        ),
-        subtitle: Text(
-          isFolder ? "Folder • $formattedDate" : "Note • $formattedDate",
-          style: TextStyle(color: Colors.grey[600], fontSize: 13),
-        ),
-        trailing: _isSelectionMode
-            ? null
-            : const Icon(Icons.chevron_right_rounded, color: Colors.grey),
       ),
     );
   }
@@ -324,7 +352,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final item = box.get(key);
 
     if (item != null && item['isFolder'] == true) {
-      
       final children = box
           .toMap()
           .entries

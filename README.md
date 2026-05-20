@@ -3,7 +3,7 @@
 **Lumina** is a high-performance, offline-first study assistant built with Flutter. It transforms physical notes into interactive study materials using on-device OCR and lightweight NLP algorithms.
 
 ## 🚀 The Philosophy: "Intelligence without the Bulk"
-Unlike modern "AI" apps that rely on heavy 1GB+ Large Language Models (LLMs) or expensive cloud APIs, Lumina uses **Algorithmic Logic** to provide a seamless, private, and ultra-fast experience—all under **50MB**.
+Unlike modern "AI" apps that rely on heavy 1GB+ Large Language Models (LLMs) or expensive cloud APIs, Lumina uses **Algorithmic Logic** to provide a seamless, private, and ultra-fast experience—all under **150MB**.
 
 ## 🧠 Core Features
 
